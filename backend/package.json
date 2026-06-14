@@ -1,0 +1,22 @@
+{
+  "name": "cloudvandana-backend",
+  "version": "1.0.0",
+  "description": "CloudVandana Salesforce Backend",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "axios": "^1.17.0",
+    "body-parser": "^1.20.5",
+    "cors": "^2.8.6",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.2",
+    "express-session": "^1.19.0",
+    "jsforce": "^3.10.16"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
