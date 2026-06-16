@@ -1,3 +1,4 @@
+import "./Login.css";
 import { FaSalesforce } from "react-icons/fa";
 
 const Login = () => {
@@ -7,7 +8,11 @@ const Login = () => {
   };
 
   return (
-    <button onClick={handleLogin}>
+    <button
+      className="login-btn"
+      onClick={handleLogin}
+    >
+      <FaSalesforce className="sf-icon" />
       Login with Salesforce
     </button>
   );

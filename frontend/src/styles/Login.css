@@ -1,0 +1,27 @@
+.login-btn {
+  margin-top: 25px;
+  background: #0070f3;
+  color: white;
+  border: none;
+  padding: 18px 34px;
+  border-radius: 16px;
+  font-size: 20px;
+  font-weight: 600;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+
+  transition: 0.3s ease;
+}
+
+.login-btn:hover {
+  background: #005ed9;
+  transform: scale(1.03);
+}
+
+.sf-icon {
+  font-size: 24px;
+}
