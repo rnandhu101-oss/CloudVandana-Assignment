@@ -4,7 +4,7 @@ const config = require("../config/salesforceConfig");
 // DEBUG CHECK
 console.log("CONFIG VALUES:", config);
 
-// LOGIN
+// ---------------- LOGIN ----------------
 exports.login = async (req, res) => {
   try {
     const oauth2 = new jsforce.OAuth2({
@@ -34,7 +34,7 @@ exports.login = async (req, res) => {
   }
 };
 
-// CALLBACK
+// ---------------- CALLBACK ----------------
 exports.callback = async (req, res) => {
   const code = req.query.code;
 
@@ -62,9 +62,8 @@ exports.callback = async (req, res) => {
     console.log("✅ Salesforce Login Success");
     console.log("Instance URL:", conn.instanceUrl);
 
-    res.redirect(
-      `${process.env.FRONTEND_URL || "http://localhost:5173"}/dashboard`
-    );
+    // DEPLOY SAFE REDIRECT
+    res.redirect(`${process.env.FRONTEND_URL}/dashboard`);
   } catch (err) {
     console.error("AUTH ERROR:", err);
 
@@ -75,7 +74,7 @@ exports.callback = async (req, res) => {
   }
 };
 
-// GET VALIDATION RULES
+// ---------------- GET VALIDATION RULES ----------------
 exports.getValidationRules = async (req, res) => {
   try {
     if (!req.session.accessToken) {
@@ -105,7 +104,7 @@ exports.getValidationRules = async (req, res) => {
   }
 };
 
-// TOGGLE VALIDATION RULE (ENABLE / DISABLE)
+// ---------------- TOGGLE VALIDATION RULE ----------------
 exports.toggleValidationRule = async (req, res) => {
   try {
     if (!req.session.accessToken) {
@@ -122,37 +121,30 @@ exports.toggleValidationRule = async (req, res) => {
       instanceUrl: req.session.instanceUrl,
     });
 
-    // Get existing rule metadata first
+    // Get validation rule metadata
     const rule = await conn.tooling
       .sobject("ValidationRule")
       .retrieve(id);
 
-    if (!rule || !rule.Metadata) {
+    if (!rule) {
       return res.status(404).json({
-        error: "Validation rule metadata not found",
+        error: "Validation rule not found",
       });
     }
 
-    // Update required metadata
+    // Proper update
     await conn.tooling.sobject("ValidationRule").update({
       Id: id,
-      Metadata: {
-        active: active,
-        description: rule.Metadata.description || "",
-        errorConditionFormula:
-          rule.Metadata.errorConditionFormula || "true",
-        errorMessage:
-          rule.Metadata.errorMessage || "Validation Rule",
-        errorDisplayField:
-          rule.Metadata.errorDisplayField || null,
-      },
+      Active: active,
     });
 
     console.log("✅ Validation Rule Updated");
 
     res.json({
       success: true,
-      message: "Validation Rule Updated Successfully",
+      message: `Validation Rule ${
+        active ? "Enabled" : "Disabled"
+      } Successfully`,
     });
   } catch (err) {
     console.error("TOGGLE ERROR:", err);
