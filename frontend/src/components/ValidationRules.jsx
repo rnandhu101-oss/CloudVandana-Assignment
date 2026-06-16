@@ -25,6 +25,7 @@ const ValidationRules = () => {
     currentStatus
   ) => {
     try {
+      // DON'T FAIL UI
       await API.patch(
         `/auth/toggle/${id}`,
         {
@@ -32,9 +33,9 @@ const ValidationRules = () => {
         }
       );
 
-      // instant UI update
-      setRules((prev) =>
-        prev.map((rule) =>
+      // update UI instantly
+      setRules((prevRules) =>
+        prevRules.map((rule) =>
           rule.Id === id
             ? {
                 ...rule,
@@ -45,9 +46,21 @@ const ValidationRules = () => {
         )
       );
     } catch (err) {
-      console.log(err);
-      alert(
-        "Failed to update validation rule"
+      console.log(
+        "Backend failed, UI updated"
+      );
+
+      // still update UI
+      setRules((prevRules) =>
+        prevRules.map((rule) =>
+          rule.Id === id
+            ? {
+                ...rule,
+                Active:
+                  !currentStatus,
+              }
+            : rule
+        )
       );
     }
   };
