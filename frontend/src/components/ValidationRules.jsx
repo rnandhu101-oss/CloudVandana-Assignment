@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import API from "../services/api";
 
-const ValidationRules = () => {
-  const [rules, setRules] = useState([]);
-
+const ValidationRules = ({
+  rules,
+  setRules,
+}) => {
   const fetchRules = async () => {
     try {
       const res = await API.get(
@@ -17,47 +18,50 @@ const ValidationRules = () => {
   };
 
   useEffect(() => {
-    fetchRules();
+    if (!rules.length) {
+      fetchRules();
+    }
   }, []);
 
   const toggleRule = async (
     id,
     currentStatus
   ) => {
+    // instant UI update
+    setRules((prevRules) =>
+      prevRules.map((rule) =>
+        rule.Id === id
+          ? {
+              ...rule,
+              Active:
+                !currentStatus,
+            }
+          : rule
+      )
+    );
+
     try {
-      // DON'T FAIL UI
       await API.patch(
         `/auth/toggle/${id}`,
         {
-          active: !currentStatus,
+          active:
+            !currentStatus,
         }
-      );
-
-      // update UI instantly
-      setRules((prevRules) =>
-        prevRules.map((rule) =>
-          rule.Id === id
-            ? {
-                ...rule,
-                Active:
-                  !currentStatus,
-              }
-            : rule
-        )
       );
     } catch (err) {
       console.log(
-        "Backend failed, UI updated"
+        "Backend failed:",
+        err
       );
 
-      // still update UI
+      // rollback if backend fails
       setRules((prevRules) =>
         prevRules.map((rule) =>
           rule.Id === id
             ? {
                 ...rule,
                 Active:
-                  !currentStatus,
+                  currentStatus,
               }
             : rule
         )
