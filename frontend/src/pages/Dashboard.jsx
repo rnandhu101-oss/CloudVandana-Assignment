@@ -1,80 +1,89 @@
 import { useEffect, useState } from "react";
-import Navbar from "../components/Navbar";
-import ValidationRules from "../components/ValidationRules";
 import API from "../services/api";
-import "../styles/Dashboard.css";
+import ValidationRules from "../components/ValidationRules";
 
 const Dashboard = () => {
-  const [rules, setRules] = useState([]);
+  const [rules, setRules] =
+    useState([]);
 
-  const fetchRules = async () => {
-    try {
-      const res = await API.get(
-        "/auth/validation-rules"
-      );
+  // fetch rules
+  const fetchRules =
+    async () => {
+      try {
+        const res =
+          await API.get(
+            "/auth/validation-rules"
+          );
 
-      setRules(res.data);
-    } catch (err) {
-      console.log(err);
-    }
-  };
+        setRules(res.data);
+      } catch (err) {
+        console.log(
+          "Fetch error:",
+          err
+        );
+      }
+    };
 
   useEffect(() => {
     fetchRules();
   }, []);
 
-  // Dynamic stats
-  const totalRules = rules.length;
+  // dashboard stats
+  const totalRules =
+    rules.length;
 
   const activeRules =
     rules.filter(
-      (rule) => rule.Active
+      (rule) => rule.Active === true
     ).length;
 
   const inactiveRules =
-    totalRules - activeRules;
+    rules.filter(
+      (rule) => rule.Active === false
+    ).length;
 
   return (
-    <div className="dashboard-page">
-      <Navbar />
+    <div className="dashboard-container">
+      <h1>
+        Validation Rules
+        Dashboard
+      </h1>
 
-      <div className="dashboard-container">
-        <div className="dashboard-header">
-          <h1>
-            Validation Rules Dashboard
-          </h1>
+      <p>
+        Manage Salesforce
+        Validation Rules
+        Professionally
+      </p>
 
-          <p>
-            Manage Salesforce Validation
-            Rules Professionally
-          </p>
+      {/* Stats Cards */}
+      <div className="stats-grid">
+        <div className="stat-card">
+          <h2>
+            {totalRules}
+          </h2>
+          <p>Total Rules</p>
         </div>
 
-        {/* Stats */}
-        <div className="stats">
-          <div className="stat-card">
-            <h3>{totalRules}</h3>
-            <p>Total Rules</p>
-          </div>
-
-          <div className="stat-card active-card">
-            <h3>{activeRules}</h3>
-            <p>Active</p>
-          </div>
-
-          <div className="stat-card inactive-card">
-            <h3>{inactiveRules}</h3>
-            <p>Inactive</p>
-          </div>
+        <div className="stat-card">
+          <h2>
+            {activeRules}
+          </h2>
+          <p>Active</p>
         </div>
 
-        <ValidationRules />
+        <div className="stat-card">
+          <h2>
+            {inactiveRules}
+          </h2>
+          <p>Inactive</p>
+        </div>
       </div>
 
-      <footer className="footer">
-        © 2026 CloudVandana Assignment |
-        Developed by Yamala Nandini
-      </footer>
+      {/* Rules Component */}
+      <ValidationRules
+        rules={rules}
+        setRules={setRules}
+      />
     </div>
   );
 };
