@@ -15,18 +15,34 @@ const salesforceRoutes = require("./routes/salesforceRoutes");
 
 app.use(express.json());
 
+// TRUST PROXY (required for Render + secure cookies)
+app.set("trust proxy", 1);
+
+// CORS FIX
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: [
+      process.env.FRONTEND_URL,
+      "https://cloud-vandana-assignment-rho.vercel.app",
+      "https://cloud-vandana-assignment-dusky.vercel.app",
+    ],
     credentials: true,
   })
 );
 
+// SESSION FIX
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || "cloudvandana_secret_key",
+    secret:
+      process.env.SESSION_SECRET ||
+      "cloudvandana_secret_key",
     resave: false,
     saveUninitialized: false,
+    cookie: {
+      secure: true,
+      sameSite: "none",
+      httpOnly: true,
+    },
   })
 );
 
