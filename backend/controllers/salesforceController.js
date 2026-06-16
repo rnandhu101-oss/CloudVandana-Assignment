@@ -107,15 +107,11 @@ exports.getValidationRules = async (req, res) => {
 };
 
 // ---------------- TOGGLE VALIDATION RULE ----------------
-exports.toggleValidationRule = async (
-  req,
-  res
-) => {
+exports.toggleValidationRule = async (req, res) => {
   try {
     if (!req.session.accessToken) {
       return res.status(401).json({
-        error:
-          "Unauthorized. Please login first.",
+        error: "Unauthorized. Please login first.",
       });
     }
 
@@ -123,63 +119,51 @@ exports.toggleValidationRule = async (
     const { active } = req.body;
 
     const conn = new jsforce.Connection({
-      accessToken:
-        req.session.accessToken,
-      instanceUrl:
-        req.session.instanceUrl,
+      accessToken: req.session.accessToken,
+      instanceUrl: req.session.instanceUrl,
     });
 
-    // Get current validation rule
-    const rule =
-      await conn.tooling
-        .sobject("ValidationRule")
-        .retrieve(id);
+    // Get validation rule info
+    const rule = await conn.tooling
+      .sobject("ValidationRule")
+      .retrieve(id);
 
     if (!rule) {
       return res.status(404).json({
-        error:
-          "Validation rule not found",
+        error: "Validation rule not found",
       });
     }
 
-    // Update active status
-    const result =
-      await conn.tooling
-        .sobject("ValidationRule")
-        .update({
-          Id: id,
-          Active: active,
-        });
+    // Metadata full name
+    const fullName = `${rule.EntityDefinition.QualifiedApiName}.${rule.ValidationName}`;
 
-    console.log(
-      "UPDATE RESULT:",
-      result
+    // Update using Metadata API
+    const result = await conn.metadata.update(
+      "ValidationRule",
+      {
+        fullName,
+        active: active,
+      }
     );
 
+    console.log("METADATA RESULT:", result);
+
     if (!result.success) {
-      throw new Error(
-        "Failed to update validation rule"
-      );
+      throw new Error("Salesforce metadata update failed");
     }
 
     res.json({
       success: true,
       active,
-      message: `Validation Rule ${
-        active
-          ? "Enabled"
-          : "Disabled"
-      } Successfully`,
+      message: `Rule ${
+        active ? "enabled" : "disabled"
+      } successfully`,
     });
   } catch (err) {
-    console.error(
-      "TOGGLE ERROR:",
-      err
-    );
+    console.error("TOGGLE ERROR:", err);
 
     res.status(500).json({
-      error:
-        "Failed to update validation rule",
+      error: "Failed to update validation rule",
       details: err.message,
     });
   }
