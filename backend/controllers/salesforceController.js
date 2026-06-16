@@ -53,92 +53,27 @@ exports.callback = async (req, res) => {
   try {
     await conn.authorize(code);
 
-    // Save session
-    req.session.accessToken =
-      conn.accessToken;
+    req.session.accessToken = conn.accessToken;
+    req.session.instanceUrl = conn.instanceUrl;
 
-    req.session.instanceUrl =
-      conn.instanceUrl;
+    console.log("✅ Salesforce Login Success");
+    console.log("Instance URL:", conn.instanceUrl);
 
-    console.log(
-      "✅ Salesforce Login Success"
-    );
-
-    console.log(
-      "Instance URL:",
-      conn.instanceUrl
-    );
-
-    // Redirect to frontend dashboard
     res.redirect(
       `${process.env.FRONTEND_URL}/dashboard`
     );
   } catch (err) {
-    console.error(
-      "AUTH ERROR:",
-      err
-    );
+    console.error("AUTH ERROR:", err);
 
     res.status(500).json({
-      error:
-        "Authorization Failed",
+      error: "Authorization Failed",
       details: err.message,
     });
   }
 };
 
 // ---------------- GET VALIDATION RULES ----------------
-exports.getValidationRules =
-  async (req, res) => {
-    try {
-      if (
-        !req.session.accessToken
-      ) {
-        return res
-          .status(401)
-          .json({
-            error:
-              "Unauthorized. Please login first.",
-          });
-      }
-
-      const conn =
-        new jsforce.Connection({
-          accessToken:
-            req.session
-              .accessToken,
-          instanceUrl:
-            req.session
-              .instanceUrl,
-        });
-
-      const result =
-        await conn.tooling.query(`
-        SELECT Id, ValidationName, Active
-        FROM ValidationRule
-      `);
-
-      res.json(
-        result.records
-      );
-    } catch (err) {
-      console.error(
-        "VALIDATION RULE ERROR:",
-        err
-      );
-
-      res.status(500).json({
-        error:
-          "Failed to fetch validation rules",
-        details:
-          err.message,
-      });
-    }
-  };
-
-// ---------------- TOGGLE VALIDATION RULE ----------------
-// ---------------- TOGGLE VALIDATION RULE ----------------
-exports.toggleValidationRule = async (req, res) => {
+exports.getValidationRules = async (req, res) => {
   try {
     if (!req.session.accessToken) {
       return res.status(401).json({
@@ -146,51 +81,105 @@ exports.toggleValidationRule = async (req, res) => {
       });
     }
 
-    const { id } = req.params;
-    const { active } = req.body;
-
     const conn = new jsforce.Connection({
       accessToken: req.session.accessToken,
       instanceUrl: req.session.instanceUrl,
     });
 
-    // Get rule metadata
-    const rule = await conn.tooling
-      .sobject("ValidationRule")
-      .retrieve(id);
+    const result = await conn.tooling.query(`
+      SELECT Id, ValidationName, Active
+      FROM ValidationRule
+    `);
 
-    if (!rule || !rule.Metadata) {
-      return res.status(404).json({
-        error: "Validation rule metadata not found",
+    res.json(result.records);
+  } catch (err) {
+    console.error(
+      "VALIDATION RULE ERROR:",
+      err
+    );
+
+    res.status(500).json({
+      error:
+        "Failed to fetch validation rules",
+      details: err.message,
+    });
+  }
+};
+
+// ---------------- TOGGLE VALIDATION RULE ----------------
+exports.toggleValidationRule = async (
+  req,
+  res
+) => {
+  try {
+    if (!req.session.accessToken) {
+      return res.status(401).json({
+        error:
+          "Unauthorized. Please login first.",
       });
     }
 
-    // Update metadata properly
-    await conn.tooling.sobject("ValidationRule").update({
-      Id: id,
-      Metadata: {
-        ...rule.Metadata,
-        active: active,
-      },
+    const { id } = req.params;
+    const { active } = req.body;
+
+    const conn = new jsforce.Connection({
+      accessToken:
+        req.session.accessToken,
+      instanceUrl:
+        req.session.instanceUrl,
     });
 
+    // Get current validation rule
+    const rule =
+      await conn.tooling
+        .sobject("ValidationRule")
+        .retrieve(id);
+
+    if (!rule) {
+      return res.status(404).json({
+        error:
+          "Validation rule not found",
+      });
+    }
+
+    // Update active status
+    const result =
+      await conn.tooling
+        .sobject("ValidationRule")
+        .update({
+          Id: id,
+          Active: active,
+        });
+
     console.log(
-      `✅ Validation Rule ${
-        active ? "Enabled" : "Disabled"
-      }`
+      "UPDATE RESULT:",
+      result
     );
+
+    if (!result.success) {
+      throw new Error(
+        "Failed to update validation rule"
+      );
+    }
 
     res.json({
       success: true,
-      message: `Rule ${
-        active ? "enabled" : "disabled"
-      } successfully`,
+      active,
+      message: `Validation Rule ${
+        active
+          ? "Enabled"
+          : "Disabled"
+      } Successfully`,
     });
   } catch (err) {
-    console.error("TOGGLE ERROR:", err);
+    console.error(
+      "TOGGLE ERROR:",
+      err
+    );
 
     res.status(500).json({
-      error: "Failed to update validation rule",
+      error:
+        "Failed to update validation rule",
       details: err.message,
     });
   }
