@@ -4,7 +4,7 @@ const Login = () => {
 
   const handleLogin = () => {
     window.location.href =
-      "http://localhost:5000/auth/login";
+    `${import.meta.env.VITE_BACKEND_URL}/auth/login`;
   };
 
   return (
