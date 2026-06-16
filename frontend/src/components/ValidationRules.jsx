@@ -1,10 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import API from "../services/api";
 
-const ValidationRules = ({
-  rules,
-  setRules,
-}) => {
+const ValidationRules = () => {
+  const [rules, setRules] = useState([]);
+
   const fetchRules = async () => {
     try {
       const res = await API.get(
@@ -18,9 +17,7 @@ const ValidationRules = ({
   };
 
   useEffect(() => {
-    if (!rules.length) {
-      fetchRules();
-    }
+    fetchRules();
   }, []);
 
   const toggleRule = async (
@@ -49,12 +46,9 @@ const ValidationRules = ({
         }
       );
     } catch (err) {
-      console.log(
-        "Backend failed:",
-        err
-      );
+      console.log(err);
 
-      // rollback if backend fails
+      // rollback if fail
       setRules((prevRules) =>
         prevRules.map((rule) =>
           rule.Id === id
