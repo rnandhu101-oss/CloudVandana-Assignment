@@ -53,12 +53,14 @@ exports.callback = async (req, res) => {
   try {
     await conn.authorize(code);
 
+    // Save session
     req.session.accessToken = conn.accessToken;
     req.session.instanceUrl = conn.instanceUrl;
 
     console.log("✅ Salesforce Login Success");
     console.log("Instance URL:", conn.instanceUrl);
 
+    // Redirect frontend
     res.redirect(
       `${process.env.FRONTEND_URL}/dashboard`
     );
@@ -87,7 +89,10 @@ exports.getValidationRules = async (req, res) => {
     });
 
     const result = await conn.tooling.query(`
-      SELECT Id, ValidationName, Active
+      SELECT Id,
+             ValidationName,
+             Active,
+             EntityDefinition.QualifiedApiName
       FROM ValidationRule
     `);
 
@@ -112,8 +117,6 @@ exports.toggleValidationRule = async (req, res) => {
     console.log("TOGGLE API HIT");
 
     if (!req.session.accessToken) {
-      console.log("NO SESSION");
-
       return res.status(401).json({
         error: "Unauthorized. Please login first.",
       });
@@ -130,19 +133,32 @@ exports.toggleValidationRule = async (req, res) => {
       instanceUrl: req.session.instanceUrl,
     });
 
-    // Get validation rule
-    const rule = await conn.tooling
-      .sobject("ValidationRule")
-      .retrieve(id);
+    // Get rule details
+    const result = await conn.tooling.query(`
+      SELECT Id,
+             ValidationName,
+             Active,
+             EntityDefinition.QualifiedApiName
+      FROM ValidationRule
+      WHERE Id='${id}'
+    `);
 
-    console.log("RULE DATA:", rule);
+    if (!result.records.length) {
+      return res.status(404).json({
+        error: "Validation rule not found",
+      });
+    }
 
+    const rule = result.records[0];
+
+    // Correct full name
     const fullName =
-      `${rule.EntityDefinitionId}.${rule.ValidationName}`;
+      `${rule.EntityDefinition.QualifiedApiName}.${rule.ValidationName}`;
 
     console.log("FULL NAME:", fullName);
 
-    const result =
+    // Metadata update
+    const updateResult =
       await conn.metadata.update(
         "ValidationRule",
         {
@@ -151,15 +167,27 @@ exports.toggleValidationRule = async (req, res) => {
         }
       );
 
-    console.log("UPDATE RESULT:", result);
+    console.log(
+      "UPDATE RESULT:",
+      updateResult
+    );
+
+    if (!updateResult.success) {
+      throw new Error(
+        "Salesforce update failed"
+      );
+    }
 
     res.json({
       success: true,
       active,
+      message: `Validation Rule ${
+        active ? "Enabled" : "Disabled"
+      } Successfully`,
     });
   } catch (err) {
     console.error(
-      "TOGGLE ERROR FULL:",
+      "TOGGLE ERROR:",
       err
     );
 
