@@ -5,6 +5,8 @@
 
 .dashboard-container {
   padding: 40px;
+  max-width: 1400px;
+  margin: auto;
 }
 
 .dashboard-header {
@@ -23,9 +25,10 @@
   font-size: 20px;
 }
 
-/* Stats */
+/* ---------------- Stats ---------------- */
 
-.stats {
+.stats,
+.stats-grid {
   display: flex;
   gap: 20px;
   margin-bottom: 40px;
@@ -35,12 +38,16 @@
 .stat-card {
   background: white;
   padding: 25px;
-  width: 220px;
+  min-width: 220px;
+  flex: 1;
   border-radius: 18px;
   text-align: center;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  box-shadow:
+    0 8px 20px
+    rgba(0, 0, 0, 0.08);
 }
 
+.stat-card h2,
 .stat-card h3 {
   font-size: 36px;
   color: #0070f3;
@@ -51,39 +58,51 @@
   color: #666;
 }
 
+.active-card h2,
 .active-card h3 {
   color: #28a745;
 }
 
+.inactive-card h2,
 .inactive-card h3 {
   color: #ff4d4f;
 }
 
-/* Rules Grid */
+/* ---------------- Rules Grid ---------------- */
 
 .rules-grid {
   display: grid;
   grid-template-columns:
-    repeat(auto-fit, minmax(330px, 1fr));
+    repeat(
+      auto-fit,
+      minmax(320px, 1fr)
+    );
   gap: 28px;
+  margin-top: 30px;
 }
 
-/* Rule Card */
+/* ---------------- Rule Card ---------------- */
 
 .rule-card {
   background: #ffffff;
   padding: 30px;
   border-radius: 22px;
   box-shadow:
-    0 8px 20px rgba(0,0,0,0.08);
+    0 8px 20px
+    rgba(0, 0, 0, 0.08);
 
-  transition: all 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 .rule-card:hover {
-  transform: translateY(-8px);
+  transform:
+    translateY(-8px);
+
   box-shadow:
-    0 12px 30px rgba(0,0,0,0.12);
+    0 12px 30px
+    rgba(0, 0, 0, 0.12);
 }
 
 .rule-card h3 {
@@ -92,7 +111,7 @@
   color: #1a1a1a;
 }
 
-/* Status */
+/* ---------------- Status ---------------- */
 
 .status {
   width: fit-content;
@@ -112,7 +131,7 @@
   color: #dc3545;
 }
 
-/* Buttons */
+/* ---------------- Buttons ---------------- */
 
 .enable-btn,
 .disable-btn {
@@ -124,7 +143,9 @@
   font-size: 18px;
   font-weight: 600;
   cursor: pointer;
-  transition: 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    background 0.3s ease;
 }
 
 .disable-btn {
@@ -147,7 +168,7 @@
   transform: scale(1.02);
 }
 
-/* Footer */
+/* ---------------- Footer ---------------- */
 
 .footer {
   text-align: center;
@@ -156,4 +177,21 @@
   margin-top: 50px;
   color: #666;
   font-size: 15px;
+}
+
+/* ---------------- Responsive ---------------- */
+
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 20px;
+  }
+
+  .dashboard-header h1 {
+    font-size: 36px;
+  }
+
+  .stats,
+  .stats-grid {
+    flex-direction: column;
+  }
 }
