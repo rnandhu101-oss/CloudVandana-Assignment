@@ -109,7 +109,11 @@ exports.getValidationRules = async (req, res) => {
 // ---------------- TOGGLE VALIDATION RULE ----------------
 exports.toggleValidationRule = async (req, res) => {
   try {
+    console.log("TOGGLE API HIT");
+
     if (!req.session.accessToken) {
+      console.log("NO SESSION");
+
       return res.status(401).json({
         error: "Unauthorized. Please login first.",
       });
@@ -118,52 +122,50 @@ exports.toggleValidationRule = async (req, res) => {
     const { id } = req.params;
     const { active } = req.body;
 
+    console.log("RULE ID:", id);
+    console.log("ACTIVE:", active);
+
     const conn = new jsforce.Connection({
       accessToken: req.session.accessToken,
       instanceUrl: req.session.instanceUrl,
     });
 
-    // Get validation rule info
+    // Get validation rule
     const rule = await conn.tooling
       .sobject("ValidationRule")
       .retrieve(id);
 
-    if (!rule) {
-      return res.status(404).json({
-        error: "Validation rule not found",
-      });
-    }
+    console.log("RULE DATA:", rule);
 
-    // Metadata full name
-    const fullName = `${rule.EntityDefinition.QualifiedApiName}.${rule.ValidationName}`;
+    const fullName =
+      `${rule.EntityDefinitionId}.${rule.ValidationName}`;
 
-    // Update using Metadata API
-    const result = await conn.metadata.update(
-      "ValidationRule",
-      {
-        fullName,
-        active: active,
-      }
-    );
+    console.log("FULL NAME:", fullName);
 
-    console.log("METADATA RESULT:", result);
+    const result =
+      await conn.metadata.update(
+        "ValidationRule",
+        {
+          fullName,
+          active,
+        }
+      );
 
-    if (!result.success) {
-      throw new Error("Salesforce metadata update failed");
-    }
+    console.log("UPDATE RESULT:", result);
 
     res.json({
       success: true,
       active,
-      message: `Rule ${
-        active ? "enabled" : "disabled"
-      } successfully`,
     });
   } catch (err) {
-    console.error("TOGGLE ERROR:", err);
+    console.error(
+      "TOGGLE ERROR FULL:",
+      err
+    );
 
     res.status(500).json({
-      error: "Failed to update validation rule",
+      error:
+        "Failed to update validation rule",
       details: err.message,
     });
   }
