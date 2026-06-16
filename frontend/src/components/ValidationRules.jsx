@@ -6,16 +6,10 @@ const ValidationRules = () => {
 
   const fetchRules = async () => {
     try {
-      const response = await API.get(
-        "/auth/validation-rules"
-      );
-
-      setRules(response.data);
-    } catch (error) {
-      console.error(
-        "Error fetching validation rules:",
-        error
-      );
+      const res = await API.get("/auth/validation-rules");
+      setRules(res.data);
+    } catch (err) {
+      console.log(err);
     }
   };
 
@@ -23,31 +17,24 @@ const ValidationRules = () => {
     fetchRules();
   }, []);
 
-  const toggleRule = async (id, active) => {
+  const toggleRule = async (id, currentStatus) => {
     try {
-      await API.patch(
-        `/auth/toggle-validation/${id}`,
-        {
-          active: !active,
-        }
-      );
+      await API.patch(`/auth/toggle/${id}`, {
+        active: !currentStatus,
+      });
 
+      // refresh immediately
       fetchRules();
-    } catch (error) {
-      console.error(
-        "Error updating validation rule:",
-        error
-      );
+    } catch (err) {
+      console.log(err);
+      alert("Failed to update validation rule");
     }
   };
 
   return (
     <div className="rules-grid">
       {rules.map((rule) => (
-        <div
-          key={rule.Id}
-          className="rule-card"
-        >
+        <div key={rule.Id} className="rule-card">
           <h3>{rule.ValidationName}</h3>
 
           <div

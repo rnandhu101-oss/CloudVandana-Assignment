@@ -137,87 +137,61 @@ exports.getValidationRules =
   };
 
 // ---------------- TOGGLE VALIDATION RULE ----------------
-exports.toggleValidationRule =
-  async (req, res) => {
-    try {
-      if (
-        !req.session.accessToken
-      ) {
-        return res
-          .status(401)
-          .json({
-            error:
-              "Unauthorized. Please login first.",
-          });
-      }
-
-      const { id } =
-        req.params;
-
-      const {
-        active,
-      } = req.body;
-
-      const conn =
-        new jsforce.Connection({
-          accessToken:
-            req.session
-              .accessToken,
-          instanceUrl:
-            req.session
-              .instanceUrl,
-        });
-
-      // Get existing rule
-      const rule =
-        await conn.tooling
-          .sobject(
-            "ValidationRule"
-          )
-          .retrieve(id);
-
-      if (!rule) {
-        return res
-          .status(404)
-          .json({
-            error:
-              "Validation rule not found",
-          });
-      }
-
-      // Update Active state
-      await conn.tooling
-        .sobject(
-          "ValidationRule"
-        )
-        .update({
-          Id: id,
-          Active: active,
-        });
-
-      console.log(
-        "✅ Validation Rule Updated"
-      );
-
-      res.json({
-        success: true,
-        message: `Rule ${
-          active
-            ? "Enabled"
-            : "Disabled"
-        } Successfully`,
-      });
-    } catch (err) {
-      console.error(
-        "TOGGLE ERROR:",
-        err
-      );
-
-      res.status(500).json({
-        error:
-          "Failed to update validation rule",
-        details:
-          err.message,
+// ---------------- TOGGLE VALIDATION RULE ----------------
+exports.toggleValidationRule = async (req, res) => {
+  try {
+    if (!req.session.accessToken) {
+      return res.status(401).json({
+        error: "Unauthorized. Please login first.",
       });
     }
-  };
+
+    const { id } = req.params;
+    const { active } = req.body;
+
+    const conn = new jsforce.Connection({
+      accessToken: req.session.accessToken,
+      instanceUrl: req.session.instanceUrl,
+    });
+
+    // Get rule metadata
+    const rule = await conn.tooling
+      .sobject("ValidationRule")
+      .retrieve(id);
+
+    if (!rule || !rule.Metadata) {
+      return res.status(404).json({
+        error: "Validation rule metadata not found",
+      });
+    }
+
+    // Update metadata properly
+    await conn.tooling.sobject("ValidationRule").update({
+      Id: id,
+      Metadata: {
+        ...rule.Metadata,
+        active: active,
+      },
+    });
+
+    console.log(
+      `✅ Validation Rule ${
+        active ? "Enabled" : "Disabled"
+      }`
+    );
+
+    res.json({
+      success: true,
+      message: `Rule ${
+        active ? "enabled" : "disabled"
+      } successfully`,
+    });
+  } catch (err) {
+    console.error("TOGGLE ERROR:", err);
+
+    res.status(500).json({
+      error: "Failed to update validation rule",
+      details: err.message,
+    });
+  }
+};
